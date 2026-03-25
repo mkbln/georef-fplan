@@ -1,0 +1,148 @@
+//based on vfdb reference model for georeferenced fireplan
+
+Table feuerwehrplan [note:'Grundlegende Informationen zum Feuerwehrplan und seinem Author. Diese Tabelle referenziert jedes Element'] { 
+  fid id [primary key, note: 'interne ID']
+  registrationnumber integer [primary key, note: 'Fire plan number (used to identify all elements)']
+  projectname varchar(255) [note: 'procjet name']
+  last_revision date [note: 'Date of last revision']
+  author_name varchar(255) [note: 'Name of the plan author']
+  author_company varchar(255) [note: 'Company of the plan author']
+  author_address varchar(500) [note: 'Street / house number of the plan author']
+  author_plz smallint [note: 'Postal code of the plan author']
+  author_city varchar(255) [note: 'City of the plan author']
+  author_phone varchar(255) [note: 'Phone number of the plan author']
+  author_mail varchar(255) [note: 'Email of the plan author']
+  }
+
+Table p_adresspunkt [note: 'Layer marks point coordinates of address locations'] {
+  fid id [primary key, note: 'Internal ID']
+  name varchar(255) [note: 'Label, the only valid value is P000']
+  assigned_fireplan integer [note: 'Associated fire plan number']
+  last_modified date [default: `now()`, note: 'Last modification date']
+  address varchar(255) [note: 'Street / house number']
+  plz smallint(5) [note: 'Postal code']
+  city varchar(255) [note: 'City']
+  geom geometry [note: 'Point geometry for spatial location (PostGIS)']
+}
+
+Table p_brandmeldezentrale [note: 'Layer marks point coordinates for the fire departments access point when a fire alarm control panel (FACP) is present'] {
+  fid id [primary key, note: 'Internal ID']
+  name varchar(255) [note: 'Label, the only valid value is P100']
+  assigned_fireplan integer [note: 'Associated fire plan number']
+  last_modified date [default: `now()`, note: 'Last modification date']
+  connected_to_fire_department boolean [note: 'Connected to fire department']
+  ugm_number integer [note: 'UGM number']
+  private_firealarm_panel boolean [note: 'Private FACP — if this field is true, then connected_to_fire_department must be false — both cannot be true at the same time.']
+  comment varchar(255) [note: 'Comment']
+  attachment blob  [note: 'Field for extended object information']
+  availability boolean [note: 'status of the availability of the facility for the fire department']
+  geom geometry [note: 'Point geometry for spatial location (PostGIS)']
+  }
+
+Table p_zufahrt_zugang [note: 'Layer marks point coordinates of access routes, entrances, and passages'] {
+  fid id [primary key, note: 'Internal ID']
+  name varchar(255) [note: 'Label, valid values range from P200 to P206']
+  assigned_fireplan integer [note: 'Associated fire plan number']
+  last_modified date [default: `now()`, note: 'Last modification date']
+  bearing_degrees double [note: 'Rotation angle in degrees, 0° = North, increasing clockwise (GIS convention)']
+  clearance_height_meters float  [note: 'clearance height in meters']
+  clearance_width_meters float [note: 'clearance width in meters']
+  max_permitted_gross_weight_tons float
+  comment varchar(255) [note: 'Comment']
+  geom geometry [note: 'Point geometry for spatial location (PostGIS)']
+}
+
+Table p_loeschwasserversorgung [note: 'The layer marks point coordinates for firefighting water supply facilities'] {
+  fid id [primary key, note: 'Internal ID']
+  name varchar(255) [note: 'Label, valid values range from P300 to P317']
+  assigned_fireplan integer [note: 'Associated fire plan number']
+  last_modified date [default: `now()`, note: 'Last modification date']
+  nominal_diameter_mm integer [note: 'Nominal diameter (DN) in millimeters']
+  extraction_volume_m3 float [note: 'Water extraction volume in cubic meters']
+  is_on_public_ground boolean [note: 'Is the facility located on public ground?']
+  floor_level varchar(10) [note: 'Floor level (e.g., "E"), according to DIN 14095, section 6.6']
+  feed_for varchar(255) [note: 'Connected system or object being supplied']
+  comment varchar(255) [note: 'Comment']
+  geom geometry [note: 'Point geometry for spatial location (PostGIS)']
+  availability boolean [note: 'status of the availability of the facility for the fire department']
+}
+
+Table p_vorbeugenderBaulicherBrandschutz [note: 'This layer marks point coordinates for fire protection facilities within the building.'] {
+  fid id [primary key, note: 'Internal ID']
+  name varchar(255) [note: 'Label, valid values range from P400 to P460']
+  assigned_fireplan integer [note: 'Associated fire plan number']
+  last_modified date [default: `now()`, note: 'Last modification date']
+  floor_level varchar(255) [note: 'Floor level (e.g., "E"), according to DIN 14095, section 6.6']
+  location_description varchar(255) [note: 'Location (e.g., room name / room number)']
+  main_switch_for varchar(255) [note: 'Main disconnect switch for (system or area)']
+  has_pv_with_battery boolean [note: 'Photovoltaic system with battery storage?']
+  fire_resistance_rating varchar(255) [note: 'Fire resistance class (e.g., 30, 90, 30S, 90S)']
+  comment varchar(255) [note: 'Comment']
+  geom geometry [note: 'Point geometry for spatial location (PostGIS)']
+  availability boolean [note: 'status of the availability of the facility for the fire department. Status not available for P401, P403, P405, P407, P409, P410, P411, P412, P413, P416, P418, P419, P421, P422, P426, P428, P434, P436, P438, P439, P441, P444, P446, P448, P454, P456, P457, P458, P459, P460']
+}
+
+Table p_vertikaleErschliessung [note: 'This layer marks point of building components or elevators used for the vertical circulation of the building.'] {
+  fid id [primary key, note: 'Internal ID']
+  name varchar(255) [note: 'Label, valid values range from P500 to P507']
+  assigned_fireplan integer [note: 'Associated fire plan number']
+  last_modified date [default: `now()`, note: 'Last modification date']
+  shaft_label varchar(255) [note: 'Stairwell or elevator designation']
+  lowest_floor integer [note: 'Lowest floor level (as integer)']
+  highest_floor integer [note: 'Highest floor level (as integer)']
+  comment varchar(255) [note: 'Comment']
+  geom geometry [note: 'Point geometry for spatial location (PostGIS)']
+}
+
+Table p_besondereGefahren [note: 'This layer marks points where special hazards are present'] {
+  fid id [primary key, note: 'Internal ID']
+  name varchar(255) [note: 'Label, valid values range from P600 to P617']
+  assigned_fireplan integer [note: 'Associated fire plan number']
+  floor_level varchar(255) [note: 'Floor level (e.g., "E"), according to DIN 14095, section 6.6']
+  location_description varchar(255) [note: 'Location (e.g., room name / room number)']
+  hazard_type varchar(255) [note: 'Type of hazard (e.g., flammable gas, corrosive liquid)']
+  hazardous_material_quantity varchar(255) [note: 'Quantity of hazardous substance']
+  system_label varchar(255) [note: 'System designation (e.g., station number, transformer label)']
+  required_safety_distance_m float [note: 'Required safety distance in meters']
+  hazard_group integer [note: 'Hazard group classification according to FwDV 500']
+  comment varchar(255) [note: 'Comment']
+  geom geometry [note: 'Point geometry for spatial location (PostGIS)']
+}
+
+Table l_vorbeugenderBaulicherBrandschutz [note: 'This layer marks lines representing firewalls, drive-throughs, or fences.'] {
+  fid id [primary key, note: 'Internal ID']
+  name varchar(255) [note: 'Label, valid values range from L100 to L102']
+  assigned_fireplan integer [note: 'Associated fire plan number']
+  floor_level varchar(255) [note: 'Floor level (e.g., "E"), according to DIN 14095, section 6.6']
+  comment varchar(255) [note: 'Comment']
+  geom geometry [note: 'Line geometry for spatial location (PostGIS)']
+}
+
+Table l_feuerwehrzufahrt [note: 'This layer marks lines that define the boundaries of fire department access routes, setup areas, and maneuvering zones.'] {
+  fid id [primary key, note: 'Internal ID']
+  name varchar(255) [note: 'Label, valid values range from L200 to L201']
+  assigned_fireplan integer [note: 'Associated fire plan number']
+  comment varchar(255) [note: 'Comment']
+  geom geometry [note: 'Line geometry for spatial location (PostGIS)']
+}
+
+Table f_vorbeugenderBaulicherBrandschutz [note: 'This layer defines displayed polygon features'] {
+  fid id [primary key, note: 'Internal ID']
+  name varchar(255) [note: 'Label, valid values range from F100 to F107']
+  assigned_fireplan integer [note: 'Associated fire plan number']
+  floor_level varchar(255) [note: 'Floor level (e.g., "E"), according to DIN 14095, section 6.6']
+  planned_completition date [note:'Planned completition date']
+  comment varchar(255) [note: 'Comment']
+  geom geometry [note: 'Polygon geometry for spatial location (PostGIS)']
+}
+
+Ref: fireplan.registrationnumber > p_adresspunkt.assigned_fireplan
+Ref: fireplan.registrationnumber > p_brandmeldezentrale.assigned_fireplan
+Ref: fireplan.registrationnumber > p_zufahrt_zugang.assigned_fireplan
+Ref: fireplan.registrationnumber > p_loeschwasserversorgung.assigned_fireplan
+Ref: fireplan.registrationnumber > p_vorbeugenderBaulicherBrandschutz.assigned_fireplan
+Ref: fireplan.registrationnumber > p_vertikaleErschliessung.assigned_fireplan
+Ref: fireplan.registrationnumber > p_besondereGefahren.assigned_fireplan
+Ref: fireplan.registrationnumber > l_vorbeugenderBaulicherBrandschutz.assigned_fireplan
+Ref: fireplan.registrationnumber > l_feuerwehrzufahrt.assigned_fireplan
+Ref: fireplan.registrationnumber > f_vorbeugenderBaulicherBrandschutz.assigned_fireplan
